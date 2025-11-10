@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobFinder Bot</title>
+    <!-- Import Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Import Inter font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Use Inter as the default font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Custom scrollbar for the chat area */
+        #chat-area::-webkit-scrollbar {
+            width: 6px;
+        }
+        #chat-area::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        #chat-area::-webkit-scrollbar-thumb {
+            background: #bdbdbd;
+            border-radius: 10px;
+        }
+        #chat-area::-webkit-scrollbar-thumb:hover {
+            background: #a5a5a5;
+        }
+
+        /* WhatsApp-style chat background */
+        #chat-area {
+            /* Changed background to a minimal black space theme */
+            background-color: #0a0a0a;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='10' cy='10' r='1' /%3E%3Ccircle cx='30' cy='30' r='1' /%3E%3Ccircle cx='20' cy='5' r='0.5' /%3E%3Ccircle cx='5' cy='25' r='0.5' /%3E%3Ccircle cx='35' cy='15' r='0.5' /%3E%3C/g%3E%3C/svg%3E");
+            background-repeat: repeat;
+        }
+
+        /* Chat bubble tails */
+        .chat-bubble::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            width: 0;
+            height: 0;
+            border: 10px solid transparent;
+            border-top-color: var(--bubble-color);
+            margin-top: -5px;
+        }
+        
+        .chat-bubble-user {
+            --bubble-color: #dcf8c6;
+            background-color: var(--bubble-color);
+            border-radius: 12px 12px 0 12px;
+        }
+        .chat-bubble-user::after {
+            right: -10px;
+            border-left-color: var(--bubble-color);
+            border-right: 0;
+        }
+
+        .chat-bubble-bot {
+            --bubble-color: #ffffff;
+            background-color: var(--bubble-color);
+            border-radius: 12px 12px 12px 0;
+        }
+        .chat-bubble-bot::after {
+            left: -10px;
+            border-right-color: var(--bubble-color);
+            border-left: 0;
+        }
+        
+        /* Typing indicator dots */
+        .typing-dot {
+            animation: typing-blink 1.4s infinite both;
+        }
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes typing-blink {
+            0% { opacity: 0.2; }
+            20% { opacity: 1; }
+            100% { opacity: 0.2; }
+        }
+    </style>
+</head>
+<body class="bg-gray-200 flex items-center justify-center min-h-screen">
+
+    <!-- Main App Container -->
+    <!-- Increased max-width from lg to 2xl and desktop height from 80vh to 85vh -->
+    <div class="w-full max-w-2xl h-[90vh] md:h-[85vh] flex flex-col bg-white shadow-2xl rounded-lg overflow-hidden">
+        
+        <!-- 1. WhatsApp-style Header -->
+        <header class="flex items-center justify-between p-3 bg-teal-700 text-white shadow-md z-10">
+            <div class="flex items-center space-x-3">
+                <!-- Profile Pic Placeholder -->
+                <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-gray-600">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 17.25v-.228a4.5 4.5 0 0 0-.12-1.03l-2.268-9.64a3.375 3.375 0 0 0-3.285-2.602H7.923a3.375 3.375 0 0 0-3.285 2.602l-2.268 9.64a4.5 4.5 0 0 0-.12 1.03v.228m19.5 0a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3m19.5 0a3 3 0 0 0-3-3H5.25a3 3 0 0 0-3 3m16.5 0h.008v.008h-.008v-.008Zm-3 0h.008v.008h-.008v-.008Z" />
+                    </svg>
+                </div>
+                <!-- Bot Name and Status -->
+                <div>
+                    <h2 class="font-semibold text-lg">JobFinder Bot</h2>
+                    <p class="text-sm text-gray-200">online</p>
+                </div>
+            </div>
+            <!-- Header Icons -->
+            <div class="flex items-center space-x-4">
+                <!-- Removed Video and Call SVGs -->
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
+                </svg>
+            </div>
+        </header>
+
+        <!-- 2. Chat Area -->
+        <main id="chat-area" class="flex-1 p-4 space-y-4 overflow-y-auto">
+            <!-- Messages will be injected here by JavaScript -->
+        </main>
+
+        <!-- 3. Typing Indicator -->
+        <div id="typing-indicator" class="hidden p-4">
+            <div class="relative chat-bubble-bot max-w-xs shadow-md p-3">
+                <div class="flex space-x-1">
+                    <div class="w-2 h-2 bg-gray-500 rounded-full typing-dot"></div>
+                    <div class="w-2 h-2 bg-gray-500 rounded-full typing-dot"></div>
+                    <div class="w-2 h-2 bg-gray-500 rounded-full typing-dot"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Input Bar -->
+        <footer class="p-3 bg-stone-100 border-t border-gray-200">
+            <div class="flex items-center space-x-2">
+                <!-- Text Input Field -->
+                <div class="flex-1 flex items-center bg-white rounded-full px-4 py-2 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-gray-500">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3.375 3.375 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3.375 3.375 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01" />
+                    </svg>
+                    <input type="text" id="user-input" placeholder="Ask for jobs..." class="w-full ml-3 border-none focus:ring-0 bg-transparent text-gray-700 placeholder-gray-500">
+                </div>
+                <!-- Send Button -->
+                <button id="send-button" class="w-12 h-12 rounded-full bg-teal-600 text-white flex items-center justify-center shadow-md hover:bg-teal-700 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                    </svg>
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const chatArea = document.getElementById('chat-area');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const typingIndicator = document.getElementById('typing-indicator');
+
+        // --- Gemini API Configuration ---
+        const API_KEY = "AIzaSyAMZsY_sjEV1zhmXc099Df9bWwRpipgOEE"; // Leave empty, Canvas will handle it
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
+        
+        // --- System Prompt ---
+        // This is the core instruction for the bot.
+        const SYSTEM_PROMPT = `You are 'JobFinder Bot', a professional and helpful assistant.
+Your task is to find relevant, recent job postings based on the user's prompt.
+You MUST use the Google Search tool to find real-time, up-to-date job listings from the web.
+When you find jobs, you MUST format each one clearly.
+
+For each job listing, provide:
+- **Job Title:** The title of the position.
+- **Company:** The name of the company hiring.
+- **Location:** The job location (e.g., "New York, NY", "Remote", "Hybrid").
+- **Summary:** A brief 1-2 sentence summary of the role.
+- **Source URL:** The direct URL to the job posting from your search results. This is mandatory.
+
+Format your response in a conversational, easy-to-read manner.
+If you find multiple jobs, list them out.
+If you cannot find any jobs matching the criteria, politely inform the user and suggest they broaden their search.
+Do not make up jobs or URLs. Only provide real information from your search tools.`;
+        const SYSTEM_PROMPT_DUAL_MODE = `You are 'JobFinder Bot', a professional assistant with two modes.
+
+1.  **Job Search Mode (Default):** If the user asks to *find jobs* (e.g., 'find junior developer jobs', 'marketing jobs in london'), you MUST use the Google Search tool. This is your primary function. When you find jobs, you MUST format each one clearly:
+    - **Job Title:** The title of the position.
+    - **Company:** The name of the company hiring.
+    - **Location:** The job location (e.g., "Remote").
+    - **Summary:** A brief 1-2 sentence summary.
+    - **Source URL:** The direct URL to the job posting. This is mandatory.
+
+2.  **✨ Career Coach Mode:** If the user asks for *advice* (e.g., 'how to prepare for an interview?', 'resume tips for a developer', 'help me write a cover letter paragraph'), do NOT use the search tool. Instead, provide a helpful, detailed, and encouraging generative response as a career coach.
+
+First, analyze the user's prompt to decide which mode to use. If in doubt, default to Job Search Mode.`;
+
+        // --- Event Listeners ---
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        window.addEventListener('load', () => {
+             displayMessage("Hi there! I'm JobFinder Bot. 👋<br><br>Tell me what kind of job you're looking for. <br><br>For example: <em>'remote data analyst jobs with 3+ years experience'</em> or <em>'entry level marketing jobs in London'</em>.", 'bot');
+             displayMessage("Hi there! I'm JobFinder Bot. 👋<br><br>You can ask me to **find jobs**:<br><em>'remote data analyst jobs'</em><br><br>Or ask for **career advice** ✨:<br><em>'how to prepare for a data analyst interview?'</em>", 'bot');
+        });
+
+        // --- Core Functions ---
+
+        /**
+         * Sends the user's message and triggers the bot's response.
+         */
+        async function sendMessage() {
+            const userQuery = userInput.value.trim();
+            if (userQuery === "") return;
+
+            displayMessage(userQuery, 'user');
+            userInput.value = "";
+            toggleTyping(true);
+
+            try {
+                const botResponse = await getBotResponse(userQuery);
+                toggleTyping(false);
+                displayMessage(botResponse, 'bot');
+            } catch (error) {
+                console.error("Error getting bot response:", error);
+                toggleTyping(false);
+                displayMessage("I'm sorry, I seem to be having trouble connecting. Please try again in a moment.", 'bot');
+            }
+        }
+
+        /**
+         * Calls the Gemini API with the user's query and system prompt.
+         * @param {string} userQuery - The user's job search prompt.
+         * @returns {Promise<string>} - The bot's formatted text response.
+         */
+        async function getBotResponse(userQuery) {
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                tools: [{ "google_search": {} }], // Enable Google Search
+                systemInstruction: {
+                    parts: [{ text: SYSTEM_PROMPT_DUAL_MODE }]
+                },
+            };
+
+            // ✨ New Gemini Feature: Smart Tool Calling ✨
+            // Check if the query seems like a job search.
+            // If it's not a clear search query, we'll remove the tool to allow for a generative response.
+            const isJobSearch = /\b(job|jobs|posting|listing|position|role|intern|vacancy|hiring|find me|look for|company|companies)\b/i.test(userQuery);
+
+            if (isJobSearch) {
+                // If it's a search, add the Google Search tool.
+                payload.tools = [{ "google_search": {} }];
+            } else {
+                // If it's not a search, remove the tools key.
+                // This lets the LLM respond generatively based on the "Career Coach Mode" in the system prompt.
+                delete payload.tools;
+            }
+
+            const response = await fetchWithBackoff(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+            
+            if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts[0].text) {
+                return result.candidates[0].content.parts[0].text;
+            } else {
+                console.error("Unexpected API response structure:", result);
+                throw new Error("Invalid API response.");
+            }
+        }
+
+        /**
+         * Displays a message in the chat area.
+         * @param {string} message - The text content of the message.
+         * @param {'user' | 'bot'} sender - Who sent the message.
+         */
+        function displayMessage(message, sender) {
+            const messageRow = document.createElement('div');
+            messageRow.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+
+            const messageBubble = document.createElement('div');
+            // Increased max-width of bubbles and set a slightly larger font size
+            messageBubble.className = `relative chat-bubble max-w-md md:max-w-lg shadow-md p-3 text-gray-800 text-[15px] ${sender === 'user' ? 'chat-bubble-user' : 'chat-bubble-bot'}`;
+            
+            // Sanitize and format the message
+            // This regex finds URLs and wraps them in <a> tags
+            const linkedMessage = linkify(message.replace(/\n/g, '<br>'));
+            messageBubble.innerHTML = linkedMessage;
+
+            messageRow.appendChild(messageBubble);
+            chatArea.appendChild(messageRow);
+            scrollToBottom();
+        }
+
+        /**
+         * Shows or hides the typing indicator.
+         * @param {boolean} show - Whether to show the indicator.
+         */
+        function toggleTyping(show) {
+            if (show) {
+                typingIndicator.classList.remove('hidden');
+            } else {
+                typingIndicator.classList.add('hidden');
+            }
+            scrollToBottom();
+        }
+        
+        /**
+         * Helper function to convert text URLs into clickable links.
+         * @param {string} text - The input text.
+         * @returns {string} - The text with HTML links.
+         */
+        function linkify(text) {
+            const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+            return text.replace(urlRegex, function(url) {
+                return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline hover:text-blue-800">${url}</a>`;
+            });
+        }
+
+        /**
+         * Scrolls the chat area to the most recent message.
+         */
+        function scrollToBottom() {
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        /**
+         * A wrapper for fetch that includes exponential backoff for retries.
+         */
+        async function fetchWithBackoff(url, options, retries = 3, delay = 1000) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    // Don't retry on client-side errors (4xx)
+                    if (response.status >= 400 && response.status < 500) {
+                        console.error(`Client error: ${response.status}`, await response.text());
+                        throw new Error(`Client error: ${response.status}. Please check your request.`);
+                    }
+                    // Retry on server-side errors (5xx)
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                return response;
+            } catch (error) {
+                if (retries > 0) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return fetchWithBackoff(url, options, retries - 1, delay * 2);
+                } else {
+                    console.error("API call failed after multiple retries.", error);
+                    throw error;
+                }
+            }
+        }
+
+    </script>
+</body>
+</html>
